@@ -1,0 +1,12 @@
+
+* Goal
+  - Implement the SRP-tree from the paper: https://link-springer-com.uml.idm.oclc.org/chapter/10.1007/978-3-662-47804-2_7
+  - Identify areas of improvement:
+    - Can it be optimized?
+    - It does not include what it calls "non-rare rare patterns" in the algorithm, how can this be included?
+* Work Break Down
+** Define algorithm
+** Implement algorithm
+*** External libraries to use:
+    - https://github.com/integeruser/FP-growth
+** Report
