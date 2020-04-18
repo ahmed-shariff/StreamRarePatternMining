@@ -51,19 +51,9 @@ int SRPTree::Initialize()
 	cout << "freqMinSup" << freqMinSup<<endl;
 	cout << "dbElementFrequency.size " << dbElementFrequency.size() << endl;
 
-	rootNode = new(nothrow) TreeNode();
-	if (rootNode)
-	{
-		//rootNode->up= rootNode->down = rootNode->nextSimilar  = NULL;
-		//rootNode->elementValue = 0;
-		rootNode->elementFrequency = 1;
-	}
-	else
-	{
-		cout << "Memory allocation failure"<< endl;
-		return 0;
-	}
-
+	//Allocate Root Node
+	rootNode = AllocateTreeNodeMemory(0);
+	
 	return 1;
 }
 
@@ -153,8 +143,53 @@ int SRPTree::GetWindowSize()
 
 void SRPTree::AddToTree()
 {
-	rootNode;
+	TreeNode* currentNode = rootNode;
+	TreeNode* newNode = NULL;
+	bool found = false;
 
+	while (!iTransaction.empty())
+	{
+		found = false;
+		list<TreeNode*>::iterator it;
+		for (it = currentNode->down.begin(); it != currentNode->down.end(); ++it)
+		{
+			if ((*it)->elementValue == iTransaction.front())
+			{
+				(*it)->elementValue++;
+				found = true;
+				iTransaction.pop_front();
+				currentNode = *it;
+			}
+		}
+		
+		if (!found)
+		{
+			newNode = AllocateTreeNodeMemory(iTransaction.front);
+			currentNode->down.push_front(newNode);
+			iTransaction.pop_front();
+			newNode->up = currentNode;
+			currentNode = newNode;
+		}
+	}
+	
+
+}
+
+TreeNode* SRPTree::AllocateTreeNodeMemory(int value)
+{
+	TreeNode* newNode = new(nothrow) TreeNode();
+	if (newNode)
+	{
+		//newNode->up= newNode->down = newNode->nextSimilar  = NULL;
+		newNode->elementValue = value;
+		newNode->elementFrequency = 1;
+		return newNode;
+	}
+	else
+	{
+		cout << "Memory allocation failure" << endl;
+		return NULL;
+	}
 }
 
 void SRPTree::Mine()

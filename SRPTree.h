@@ -34,6 +34,7 @@ class SRPTree {
 	void ExtractIntegersToList();
 	void AddElementFrequency();
 	void AddToTree();
+	TreeNode* AllocateTreeNodeMemory(int value);
 
 public:
 	SRPTree();
@@ -43,5 +44,6 @@ public:
 	int ReadTransaction();
 	int GetWindowSize();
 	void Mine();
+
 	//void GetFreqMinSup();
 };
