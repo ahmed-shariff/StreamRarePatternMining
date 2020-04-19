@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <list>
+#include <map>
 
 using namespace std;
 
@@ -14,6 +15,18 @@ struct TreeNode {
 	TreeNode* up;
 	list<TreeNode*> down;
 	TreeNode* nextSimilar;
+	TreeNode* prevSimilar;
+};
+
+//struct ConnectionElement {
+//	int elementValue;
+//	int elementFrequency;
+//};
+
+struct ConnectionRow {
+	TreeNode* firstOccurrence;
+	map <int, int> connectedElements; //key value is element number and the other value is frequency
+	TreeNode* lastOccurrence;
 };
 
 class SRPTree {
@@ -27,6 +40,7 @@ class SRPTree {
 	ifstream in;
 	TreeNode *rootNode;
 	
+	vector <ConnectionRow*> connectionTable;
 	vector<int> dbElementFrequency; //Vector created to store the frequency of each element
 	string sTransaction;  //One Transaction information in string
 	list<int> iTransaction;  //List of integers for each transaction
@@ -34,7 +48,11 @@ class SRPTree {
 	void ExtractIntegersToList();
 	void AddElementFrequency();
 	void AddToTree();
+	void AddToConnectionTable();
 	TreeNode* AllocateTreeNodeMemory(int value);
+	ConnectionRow* AllocateConnectionRow();
+	void clearPreviousWindow();
+	void DeleteTreeNodes();
 
 public:
 	SRPTree();
