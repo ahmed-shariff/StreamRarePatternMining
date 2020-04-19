@@ -1,4 +1,8 @@
 #include "SRPTree.h"
+#include <iostream>
+#include <vector>
+#include <set>
+#include "external/FP-growth/include/fptree.hpp"
 
 SRPTree::SRPTree()
 {
@@ -272,9 +276,71 @@ ConnectionRow* SRPTree::AllocateConnectionRow()
 	}
 }
 
+void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
+{
+	if(node->elementValue == searchItem)
+		(*returnList).push_back(node);
+	list<TreeNode*>::iterator it;
+	for (it = node->down.begin(); it != node->down.end(); ++it)
+		_dfs(node, searchItem, returnList);
+}
+
 void SRPTree::Mine()
 {
+	cout << "mining" << endl;
+	set<int> searchElements;
+	int i;
 
+	// get rare items
+	for (i=0; i < dbElementFrequency.size(); i++)
+	{
+		if( dbElementFrequency[i] >= rareMinSup && dbElementFrequency[i] < freqMinSup )
+			searchElements.insert(i);
+	}
+
+	// get items co occuring with rare items
+	for (i = 0; i < dbElementFrequency.size(); i++)
+	{
+		if( dbElementFrequency[i] >= rareMinSup) // TODO: and check if the element is co occuring with another element??
+			searchElements.insert(i);
+	}
+	
+	set<int>::iterator setIt;
+	list<TreeNode*>::iterator listIt;
+	list<TreeNode*> searchList;
+	vector<Transaction<int>> conditionalBase;
+	TreeNode *currentNode;
+	set<Pattern<int>> rarePatterns; // can we guarentee that the same itemsets will not be repeated?
+	/*
+	 * 1. Build the conditional base for each item in R
+	 * 2. Apply FP growth on it.
+	 * TODO: The FP growth sill prune none rare itemsets, how?
+	 */
+	for (setIt = searchElements.begin(); setIt != searchElements.end();setIt++)
+	{
+		searchList.clear();
+		_dfs(rootNode, *setIt, &searchList);
+		for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
+		{
+			currentNode = *listIt;
+			Transaction<int> _temp_transaction;
+			while(currentNode != rootNode)
+			{
+				_temp_transaction.push_back(currentNode->elementValue);
+				currentNode = currentNode->up;
+			}
+			conditionalBase.push_back(_temp_transaction);
+		}
+		FPTree<int> fptree(conditionalBase, rareMinSup);
+		
+		const std::set<Pattern<int>> patterns = fptree_growth( fptree );
+		set<Pattern<int>>::iterator it;
+		for (it=patterns.begin(); it != patterns.end(); it++)
+		{
+			rarePatterns.insert((*it));
+		}
+	}
+	// return rarePatterns;
 }
 
 void SRPTree::clearPreviousWindow()
