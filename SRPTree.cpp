@@ -164,7 +164,7 @@ void SRPTree::AddToTree()
 		
 		if (!found)
 		{
-			newNode = AllocateTreeNodeMemory(iTransaction.front);
+			newNode = AllocateTreeNodeMemory(iTransaction.front());
 			currentNode->down.push_front(newNode);
 			iTransaction.pop_front();
 			newNode->up = currentNode;
