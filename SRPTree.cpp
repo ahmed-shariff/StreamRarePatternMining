@@ -36,7 +36,7 @@ int SRPTree::Initialize()
 		cout << "Using default value..."<<endl;
 	}
 
-	connectionTable.resize(distinctElements);
+	//connectionTable.resize(distinctElements);
 	dbElementFrequency.resize(distinctElements);
 
 	cout << "Enter rareMinSup ";
@@ -84,15 +84,15 @@ int SRPTree::ReadTransaction()
 		AddToTree();
 		list<int>::iterator it;
 		cout << endl;
-		for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
-			std::cout << ' ' << *it;
-		cout << endl;
+		//for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
+		//	std::cout << ' ' << *it;
+		/*cout << endl;*/
 
 		//Clear the list for the next transaction
 		iTransaction.clear();
 
-		//return 0; //temporary
-		return 1;
+		return 0; //temporary
+	//	return 1;
 	}
 	else
 	{
@@ -168,20 +168,22 @@ void SRPTree::AddToTree()
 		{
 			newNode = AllocateTreeNodeMemory(iTransaction.front());
 			currentNode->down.push_front(newNode);
-			iTransaction.pop_front();
 			newNode->up = currentNode;
 			currentNode = newNode;
+
+			ConnectionRow* row = connectionTable[iTransaction.front()];
+			iTransaction.pop_front();
 			
-			if (!connectionTable[iTransaction.front()]->firstOccurrence)
+			if (!row->firstOccurrence)
 			{
-				connectionTable[iTransaction.front()]->firstOccurrence = newNode;
-				connectionTable[iTransaction.front()]->lastOccurrence = newNode;
+				row->firstOccurrence = newNode;
+				row->lastOccurrence = newNode;
 			}
 			else
 			{
-				newNode->prevSimilar = connectionTable[iTransaction.front()]->lastOccurrence;
-				connectionTable[iTransaction.front()]->lastOccurrence->nextSimilar = newNode;
-				connectionTable[iTransaction.front()]->lastOccurrence = newNode;
+				newNode->prevSimilar = row->lastOccurrence;
+				row->lastOccurrence->nextSimilar = newNode;
+				row->lastOccurrence = newNode;
 			}
 		}
 	}
@@ -208,9 +210,13 @@ void SRPTree::AddToConnectionTable()
 {
 	for (std::list<int>::iterator it = iTransaction.begin(); it != iTransaction.end(); ++it)
 	{
-		if (!connectionTable[*it])
+		map<int, ConnectionRow*>::iterator connectionTableIterator;
+
+		connectionTableIterator = connectionTable.find(*it);
+
+		if (connectionTableIterator == connectionTable.end())
 		{
-			connectionTable[*it] = AllocateConnectionRow();	
+			connectionTable[*it] = AllocateConnectionRow();
 		}
 		std::list<int>::iterator itmid = it;
 		map<int, int>::iterator mapIterator;
@@ -219,7 +225,7 @@ void SRPTree::AddToConnectionTable()
 		for (itmid; itmid != iTransaction.end(); ++itmid)
 		{
 			mapIterator = connectionTable[*it]->connectedElements.find(*(itmid));
-			if(mapIterator == connectionTable[*itmid]->connectedElements.end())
+			if(mapIterator == connectionTable[*it]->connectedElements.end())
 			{ 
 				connectionTable[*it]->connectedElements.insert(pair<int, int>(*itmid, 1));
 			}
@@ -228,6 +234,27 @@ void SRPTree::AddToConnectionTable()
 				mapIterator->second++;
 			}
 		}
+
+		//if (!connectionTable[*it])
+		//{
+		//	connectionTable[*it] = AllocateConnectionRow();	
+		//}
+		//std::list<int>::iterator itmid = it;
+		//map<int, int>::iterator mapIterator;
+		//itmid++;
+
+		//for (itmid; itmid != iTransaction.end(); ++itmid)
+		//{
+		//	mapIterator = connectionTable[*it]->connectedElements.find(*(itmid));
+		//	if(mapIterator == connectionTable[*itmid]->connectedElements.end())
+		//	{ 
+		//		connectionTable[*it]->connectedElements.insert(pair<int, int>(*itmid, 1));
+		//	}
+		//	else
+		//	{
+		//		mapIterator->second++;
+		//	}
+		//}
 	}
 }
 
