@@ -1,7 +1,10 @@
 #include "SRPTree.h"
+
 #include <iostream>
 #include <vector>
 #include <set>
+#include <limits>
+
 #include "external/FP-growth/include/fptree.hpp"
 
 SRPTree::SRPTree()
@@ -298,6 +301,22 @@ void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
 		_dfs(node, searchItem, returnList);
 }
 
+
+void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transaction<int>> conditionalBase){
+	Transaction<int> _temp_transaction;
+	int minSupport = numeric_limits<int>::max();
+	while(currentNode != rootNode)
+	{
+		if(currentNode->elementFrequency < minSupport)
+			minSupport = currentNode->elementFrequency;
+		_temp_transaction.push_back(currentNode->elementValue);
+		currentNode = currentNode->up;
+	}
+	for (int i=0; i < minSupport; i++) {
+		conditionalBase.push_back(_temp_transaction);
+	}
+}
+
 set<Pattern<int>> SRPTree::Mine()
 {
 	cout << "mining" << endl;
@@ -329,6 +348,7 @@ set<Pattern<int>> SRPTree::Mine()
 			}
 		}
 	}
+	
 	list<TreeNode*>::iterator listIt;
 	vector<Transaction<int>> conditionalBase;
 	TreeNode *currentNode;
@@ -348,13 +368,7 @@ set<Pattern<int>> SRPTree::Mine()
 			for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
 			{
 				currentNode = *listIt;
-				Transaction<int> _temp_transaction;
-				while(currentNode != rootNode)
-				{
-					_temp_transaction.push_back(currentNode->elementValue);
-					currentNode = currentNode->up;
-				}
-				conditionalBase.push_back(_temp_transaction);	
+				_get_transactions(currentNode, rootNode, conditionalBase);
 			}
 		}else{
 		
@@ -362,13 +376,7 @@ set<Pattern<int>> SRPTree::Mine()
 			currentNode = currentRow.firstOccurrence;
 			while(currentNode != currentRow.lastOccurrence)
 			{
-				Transaction<int> _temp_transaction;
-				while(currentNode != rootNode)
-				{
-					_temp_transaction.push_back(currentNode->elementValue);
-					currentNode = currentNode->up;
-				}
-				conditionalBase.push_back(_temp_transaction);
+				_get_transactions(currentNode, rootNode, conditionalBase);
 				currentNode = currentNode->nextSimilar;
 			}
 		}
