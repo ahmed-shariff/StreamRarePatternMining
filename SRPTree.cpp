@@ -285,7 +285,7 @@ void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
 		_dfs(node, searchItem, returnList);
 }
 
-void SRPTree::Mine()
+set<Pattern<int>> SRPTree::Mine()
 {
 	cout << "mining" << endl;
 	set<int> searchElements;
@@ -298,14 +298,21 @@ void SRPTree::Mine()
 			searchElements.insert(i);
 	}
 
+	set<int> rareItems(searchElements);
+	set<int>::iterator setIt;
+	map <int, int> _connectedElements;
 	// get items co occuring with rare items
 	for (i = 0; i < dbElementFrequency.size(); i++)
 	{
-		if( dbElementFrequency[i] >= rareMinSup) // TODO: and check if the element is co occuring with another element??
-			searchElements.insert(i);
+		if( dbElementFrequency[i] >= rareMinSup)
+			_connectedElements = connectionTable[i]->connectedElements;
+		// Loop over the rare items and check if any of the rare items co occur with this item
+		for (setIt = rareItems.begin(); setIt != rareItems.end(); setIt++) {
+			if (_connectedElements.find(*setIt) != _connectedElements.end())
+				searchElements.insert(i);
+		}
 	}
 	
-	set<int>::iterator setIt;
 	list<TreeNode*>::iterator listIt;
 	list<TreeNode*> searchList;
 	vector<Transaction<int>> conditionalBase;

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <list>
 #include <map>
+#include "external/FP-growth/include/fptree.hpp"
 
 using namespace std;
 
@@ -62,7 +63,7 @@ public:
 	int Finalize();
 	int ReadTransaction();
 	int GetWindowSize();
-	void Mine();
+	set<Pattern<int>> Mine();
 
 	//void GetFreqMinSup();
 };
