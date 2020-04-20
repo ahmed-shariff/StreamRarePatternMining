@@ -41,6 +41,7 @@ class SRPTree {
 	string filename;
 	ifstream in;
 	TreeNode *rootNode;
+	bool useDfs;
 	
 	//vector <ConnectionRow*> connectionTable;
 	map <int, ConnectionRow*> connectionTable;

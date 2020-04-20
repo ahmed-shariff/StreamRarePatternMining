@@ -14,6 +14,7 @@ SRPTree::SRPTree()
 	inputDistinctElements = 0;
 	//Change name of database file here
 	filename = "T10I4D100K.dat.txt";
+	useDfs = true;
 }
 
 int SRPTree::Initialize()
@@ -328,11 +329,11 @@ set<Pattern<int>> SRPTree::Mine()
 			}
 		}
 	}
-	
 	list<TreeNode*>::iterator listIt;
 	vector<Transaction<int>> conditionalBase;
 	TreeNode *currentNode;
-	ConnectionRow currentRow;
+	ConnectionRow currentRow; // when using horizontal connections
+	list<TreeNode*> searchList; // when using the dfs
 	set<Pattern<int>> rarePatterns; // can we guarentee that the same itemsets will not be repeated?
 	/*
 	 * 1. Build the conditional base for each item in R
@@ -341,18 +342,35 @@ set<Pattern<int>> SRPTree::Mine()
 	 */
 	for (setIt = searchElements.begin(); setIt != searchElements.end();setIt++)
 	{
-		currentRow = *connectionTable[*setIt];
-		currentNode = currentRow.firstOccurrence;
-		while(currentNode != currentRow.lastOccurrence)
-		{
-			Transaction<int> _temp_transaction;
-			while(currentNode != rootNode)
+		if(useDfs){
+			searchList.clear();                                                
+			_dfs(rootNode, *setIt, &searchList);                               
+			for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
 			{
-				_temp_transaction.push_back(currentNode->elementValue);
-				currentNode = currentNode->up;
+				currentNode = *listIt;
+				Transaction<int> _temp_transaction;
+				while(currentNode != rootNode)
+				{
+					_temp_transaction.push_back(currentNode->elementValue);
+					currentNode = currentNode->up;
+				}
+				conditionalBase.push_back(_temp_transaction);	
 			}
-			conditionalBase.push_back(_temp_transaction);
-			currentNode = currentNode->nextSimilar;
+		}else{
+		
+			currentRow = *connectionTable[*setIt];
+			currentNode = currentRow.firstOccurrence;
+			while(currentNode != currentRow.lastOccurrence)
+			{
+				Transaction<int> _temp_transaction;
+				while(currentNode != rootNode)
+				{
+					_temp_transaction.push_back(currentNode->elementValue);
+					currentNode = currentNode->up;
+				}
+				conditionalBase.push_back(_temp_transaction);
+				currentNode = currentNode->nextSimilar;
+			}
 		}
 		FPTree<int> fptree(conditionalBase, rareMinSup);
 		
@@ -362,6 +380,7 @@ set<Pattern<int>> SRPTree::Mine()
 		{
 			rarePatterns.insert((*it)); // need to check if duplicates are being generated
 		}
+		
 	}
 	return rarePatterns;
 }
