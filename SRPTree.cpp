@@ -319,7 +319,7 @@ set<Pattern<int>> SRPTree::Mine()
 	// get items co occuring with rare items
 	for (i = 0; i < connectionTable.size(); i++)
 	{
-		if( connectionTable[i]->elementFrequency >= rareMinSup){
+		if( connectionTable[i]->elementFrequency >= freqMinSup){
 			_connectedElements = connectionTable[i]->connectedElements;
 			// Loop over the rare items and check if any of the rare items co occur with this item
 			for (setIt = rareItems.begin(); setIt != rareItems.end(); setIt++) {
@@ -360,7 +360,7 @@ set<Pattern<int>> SRPTree::Mine()
 		set<Pattern<int>>::iterator it;
 		for (it=patterns.begin(); it != patterns.end(); it++)
 		{
-			rarePatterns.insert((*it));
+			rarePatterns.insert((*it)); // need to check if duplicates are being generated
 		}
 	}
 	return rarePatterns;
