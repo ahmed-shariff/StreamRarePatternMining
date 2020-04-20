@@ -1,5 +1,12 @@
 #include "SRPTree.h"
 
+#include <iostream>
+#include <vector>
+#include <set>
+#include <limits>
+
+#include "external/FP-growth/include/fptree.hpp"
+
 SRPTree::SRPTree()
 {
 	rareMinSup = 0;
@@ -10,6 +17,7 @@ SRPTree::SRPTree()
 	inputDistinctElements = 0;
 	//Change name of database file here
 	filename = "T10I4D100K.dat.txt";
+	useDfs = true;
 }
 
 int SRPTree::Initialize()
@@ -284,9 +292,105 @@ ConnectionRow* SRPTree::AllocateConnectionRow()
 	}
 }
 
-void SRPTree::Mine()
+void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
 {
+	if(node->elementValue == searchItem)
+		(*returnList).push_back(node);
+	list<TreeNode*>::iterator it;
+	for (it = node->down.begin(); it != node->down.end(); ++it)
+		_dfs(node, searchItem, returnList);
+}
+
+
+void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transaction<int>> conditionalBase){
+	Transaction<int> _temp_transaction;
+	int minSupport = numeric_limits<int>::max();
+	while(currentNode != rootNode)
+	{
+		if(currentNode->elementFrequency < minSupport)
+			minSupport = currentNode->elementFrequency;
+		_temp_transaction.push_back(currentNode->elementValue);
+		currentNode = currentNode->up;
+	}
+	for (int i=0; i < minSupport; i++) {
+		conditionalBase.push_back(_temp_transaction);
+	}
+}
+
+set<Pattern<int>> SRPTree::Mine()
+{
+	cout << "mining" << endl;
 	clearPreviousWindow();
+	set<int> searchElements;
+	int i;
+
+	int f;
+	// get rare items
+	for (i=0; i < connectionTable.size(); i++)
+	{
+		f = connectionTable[i]->elementFrequency;
+		if( f >= rareMinSup && f < freqMinSup )
+			searchElements.insert(i);
+	}
+
+	set<int> rareItems(searchElements);
+	set<int>::iterator setIt;
+	map <int, int> _connectedElements;
+	// get items co occuring with rare items
+	for (i = 0; i < connectionTable.size(); i++)
+	{
+		if( connectionTable[i]->elementFrequency >= freqMinSup){
+			_connectedElements = connectionTable[i]->connectedElements;
+			// Loop over the rare items and check if any of the rare items co occur with this item
+			for (setIt = rareItems.begin(); setIt != rareItems.end(); setIt++) {
+				if (_connectedElements.find(*setIt) != _connectedElements.end())
+					searchElements.insert(i);
+			}
+		}
+	}
+	
+	list<TreeNode*>::iterator listIt;
+	vector<Transaction<int>> conditionalBase;
+	TreeNode *currentNode;
+	ConnectionRow currentRow; // when using horizontal connections
+	list<TreeNode*> searchList; // when using the dfs
+	set<Pattern<int>> rarePatterns; // can we guarentee that the same itemsets will not be repeated?
+	/*
+	 * 1. Build the conditional base for each item in R
+	 * 2. Apply FP growth on it.
+	 * TODO: The FP growth sill prune none rare itemsets, how?
+	 */
+	for (setIt = searchElements.begin(); setIt != searchElements.end();setIt++)
+	{
+		if(useDfs){
+			searchList.clear();                                                
+			_dfs(rootNode, *setIt, &searchList);                               
+			for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
+			{
+				currentNode = *listIt;
+				_get_transactions(currentNode, rootNode, conditionalBase);
+			}
+		}else{
+		
+			currentRow = *connectionTable[*setIt];
+			currentNode = currentRow.firstOccurrence;
+			while(currentNode != currentRow.lastOccurrence)
+			{
+				_get_transactions(currentNode, rootNode, conditionalBase);
+				currentNode = currentNode->nextSimilar;
+			}
+		}
+		FPTree<int> fptree(conditionalBase, rareMinSup);
+		
+		const std::set<Pattern<int>> patterns = fptree_growth( fptree );
+		set<Pattern<int>>::iterator it;
+		for (it=patterns.begin(); it != patterns.end(); it++)
+		{
+			rarePatterns.insert((*it)); // need to check if duplicates are being generated
+		}
+		
+	}
+	return rarePatterns;
 }
 
 void SRPTree::clearPreviousWindow()

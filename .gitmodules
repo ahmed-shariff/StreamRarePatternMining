@@ -1,0 +1,3 @@
+[submodule "external/FP-growth"]
+	path = external/FP-growth
+	url = https://github.com/ahmed-shariff/FP-growth.git

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <list>
 #include <map>
+#include "external/FP-growth/include/fptree.hpp"
 
 using namespace std;
 
@@ -40,6 +41,7 @@ class SRPTree {
 	string filename;
 	ifstream in;
 	TreeNode *rootNode;
+	bool useDfs;
 	
 	//vector <ConnectionRow*> connectionTable;
 	map <int, ConnectionRow*> connectionTable;
@@ -63,7 +65,7 @@ public:
 	int Finalize();
 	int ReadTransaction();
 	int GetWindowSize();
-	void Mine();
+	set<Pattern<int>> Mine();
 
 	//void GetFreqMinSup();
 };
