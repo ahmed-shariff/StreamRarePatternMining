@@ -40,7 +40,8 @@ class SRPTree {
 	ifstream in;
 	TreeNode *rootNode;
 	
-	vector <ConnectionRow*> connectionTable;
+	//vector <ConnectionRow*> connectionTable;
+	map <int, ConnectionRow*> connectionTable;
 	vector<int> dbElementFrequency; //Vector created to store the frequency of each element
 	string sTransaction;  //One Transaction information in string
 	list<int> iTransaction;  //List of integers for each transaction
