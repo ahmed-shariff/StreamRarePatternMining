@@ -36,6 +36,7 @@ int SRPTree::Initialize()
 		cout << "Using default value..."<<endl;
 	}
 
+	//connectionTable.resize(distinctElements);
 	dbElementFrequency.resize(distinctElements);
 
 	cout << "Enter rareMinSup ";
@@ -78,19 +79,20 @@ int SRPTree::ReadTransaction()
 		//Update element frequency 
 		AddElementFrequency();
 		//Add it to the connection table
+		AddToConnectionTable();
 		//Build tree
 		AddToTree();
 		list<int>::iterator it;
 		cout << endl;
-		for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
-			std::cout << ' ' << *it;
-		cout << endl;
+		//for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
+		//	std::cout << ' ' << *it;
+		/*cout << endl;*/
 
 		//Clear the list for the next transaction
 		iTransaction.clear();
 
 		return 0; //temporary
-		//return 1;
+	//	return 1;
 	}
 	else
 	{
@@ -166,13 +168,25 @@ void SRPTree::AddToTree()
 		{
 			newNode = AllocateTreeNodeMemory(iTransaction.front());
 			currentNode->down.push_front(newNode);
-			iTransaction.pop_front();
 			newNode->up = currentNode;
 			currentNode = newNode;
+
+			ConnectionRow* row = connectionTable[iTransaction.front()];
+			iTransaction.pop_front();
+			
+			if (!row->firstOccurrence)
+			{
+				row->firstOccurrence = newNode;
+				row->lastOccurrence = newNode;
+			}
+			else
+			{
+				newNode->prevSimilar = row->lastOccurrence;
+				row->lastOccurrence->nextSimilar = newNode;
+				row->lastOccurrence = newNode;
+			}
 		}
 	}
-	
-
 }
 
 TreeNode* SRPTree::AllocateTreeNodeMemory(int value)
@@ -192,7 +206,91 @@ TreeNode* SRPTree::AllocateTreeNodeMemory(int value)
 	}
 }
 
+void SRPTree::AddToConnectionTable()
+{
+	for (std::list<int>::iterator it = iTransaction.begin(); it != iTransaction.end(); ++it)
+	{
+		map<int, ConnectionRow*>::iterator connectionTableIterator;
+
+		connectionTableIterator = connectionTable.find(*it);
+
+		if (connectionTableIterator == connectionTable.end())
+		{
+			connectionTable[*it] = AllocateConnectionRow();
+		}
+		std::list<int>::iterator itmid = it;
+		map<int, int>::iterator mapIterator;
+		itmid++;
+
+		for (itmid; itmid != iTransaction.end(); ++itmid)
+		{
+			mapIterator = connectionTable[*it]->connectedElements.find(*(itmid));
+			if(mapIterator == connectionTable[*it]->connectedElements.end())
+			{ 
+				connectionTable[*it]->connectedElements.insert(pair<int, int>(*itmid, 1));
+			}
+			else
+			{
+				mapIterator->second++;
+			}
+		}
+
+		//if (!connectionTable[*it])
+		//{
+		//	connectionTable[*it] = AllocateConnectionRow();	
+		//}
+		//std::list<int>::iterator itmid = it;
+		//map<int, int>::iterator mapIterator;
+		//itmid++;
+
+		//for (itmid; itmid != iTransaction.end(); ++itmid)
+		//{
+		//	mapIterator = connectionTable[*it]->connectedElements.find(*(itmid));
+		//	if(mapIterator == connectionTable[*itmid]->connectedElements.end())
+		//	{ 
+		//		connectionTable[*it]->connectedElements.insert(pair<int, int>(*itmid, 1));
+		//	}
+		//	else
+		//	{
+		//		mapIterator->second++;
+		//	}
+		//}
+	}
+}
+
+ConnectionRow* SRPTree::AllocateConnectionRow()
+{
+	ConnectionRow* newRow = new(nothrow) ConnectionRow();
+	if (newRow)
+	{
+		return newRow;
+	}
+	else
+	{
+		cout << "Memory allocation failure" << endl;
+		return NULL;
+	}
+}
+
 void SRPTree::Mine()
+{
+
+}
+
+void SRPTree::clearPreviousWindow()
+{
+
+	//DeleteTreeNodes();
+	//DeleteAllocateConnectionRow();
+
+	//delete vector dbElementFrequency;
+	//delete connectionTable; //delete all vectors
+	//delete connectedElements maps; //connection row deletion shoudl clear this memory
+
+	//connectionTable[*it]->connectedElements.erase(connectionTable[*it]->connectedElements.begin(), connectionTable[*it]->connectedElements.end());
+}
+
+void SRPTree::DeleteTreeNodes()
 {
 
 }

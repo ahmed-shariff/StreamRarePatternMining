@@ -22,6 +22,9 @@ int main()
 			srpTree.Mine();
 			readCount = 0;
 		}
+		//Test code for first 100 elements
+		if (readCount == 100)
+			break;
 		
 	}
 
