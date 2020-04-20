@@ -76,10 +76,10 @@ int SRPTree::ReadTransaction()
 		ExtractIntegersToList();
 		//Sort the list in canonical order
 		iTransaction.sort();
-		//Update element frequency 
-		AddElementFrequency();
 		//Add it to the connection table
 		AddToConnectionTable();
+		//Update element frequency 
+		AddElementFrequency();
 		//Build tree
 		AddToTree();
 		list<int>::iterator it;
@@ -131,10 +131,19 @@ void SRPTree::ExtractIntegersToList()
 void SRPTree::AddElementFrequency()
 {
 	list<int>::iterator it;
+	map<int, ConnectionRow*>::iterator connectionTableIterator;
 	
 	for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
 	{
-		cout<<"before" <<dbElementFrequency[*it]++ << "after"<<dbElementFrequency[*it] <<endl;
+		//cout<<"before" <<dbElementFrequency[*it]++ << "after"<<dbElementFrequency[*it] <<endl;
+	
+		connectionTableIterator = connectionTable.find(*it);
+
+		if (connectionTableIterator != connectionTable.end())
+		{
+			connectionTableIterator->second->elementFrequency++;
+		}
+		connectionTableIterator = connectionTable.end();
 	}
 }
 
@@ -217,6 +226,7 @@ void SRPTree::AddToConnectionTable()
 		if (connectionTableIterator == connectionTable.end())
 		{
 			connectionTable[*it] = AllocateConnectionRow();
+			connectionTable[*it]->elementFrequency = 0;
 		}
 		std::list<int>::iterator itmid = it;
 		map<int, int>::iterator mapIterator;
@@ -274,23 +284,44 @@ ConnectionRow* SRPTree::AllocateConnectionRow()
 
 void SRPTree::Mine()
 {
-
+	clearPreviousWindow();
 }
 
 void SRPTree::clearPreviousWindow()
 {
 
-	//DeleteTreeNodes();
-	//DeleteAllocateConnectionRow();
+	DeleteTreeNodes();
 
-	//delete vector dbElementFrequency;
-	//delete connectionTable; //delete all vectors
-	//delete connectedElements maps; //connection row deletion shoudl clear this memory
+	map<int, ConnectionRow*>::iterator connectionTableIterator;
 
-	//connectionTable[*it]->connectedElements.erase(connectionTable[*it]->connectedElements.begin(), connectionTable[*it]->connectedElements.end());
+	for (std::map<int, ConnectionRow*>::iterator connectionTableIterator = connectionTable.begin(); connectionTableIterator != connectionTable.end(); ++connectionTableIterator)
+	{
+		connectionTableIterator->second->connectedElements.clear();
+		delete connectionTableIterator->second;
+	}
 }
 
 void SRPTree::DeleteTreeNodes()
 {
+	//Without tree traversal
+	for (std::map<int, ConnectionRow*>::reverse_iterator  connectionTableIterator = connectionTable.rbegin(); connectionTableIterator != connectionTable.rend(); ++connectionTableIterator)
+	{
+		while (connectionTableIterator->second->lastOccurrence->prevSimilar)
+		{
+			if (connectionTableIterator->second->lastOccurrence->up == rootNode)
+			{
+				for (std::list<TreeNode*>::iterator it = rootNode->down.begin(); it != rootNode->down.end(); ++it)
+					if(*it == connectionTableIterator->second->lastOccurrence)
+					{
+						rootNode->down.erase(it);
+					}
+			}
+			TreeNode* previousOccurence = connectionTableIterator->second->lastOccurrence->prevSimilar;
+			delete connectionTableIterator->second->lastOccurrence;
+			connectionTableIterator->second->lastOccurrence = previousOccurence;
+		}
+		connectionTableIterator->second->firstOccurrence = NULL;
+		connectionTableIterator->second->lastOccurrence = NULL;
+	}
 
 }
