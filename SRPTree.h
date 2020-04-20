@@ -27,6 +27,7 @@ struct TreeNode {
 struct ConnectionRow {
 	TreeNode* firstOccurrence;
 	map <int, int> connectedElements; //key value is element number and the other value is frequency
+	int elementFrequency;
 	TreeNode* lastOccurrence;
 };
 
@@ -43,7 +44,7 @@ class SRPTree {
 	
 	//vector <ConnectionRow*> connectionTable;
 	map <int, ConnectionRow*> connectionTable;
-	vector<int> dbElementFrequency; //Vector created to store the frequency of each element
+	//vector<int> dbElementFrequency; //Vector created to store the frequency of each element
 	string sTransaction;  //One Transaction information in string
 	list<int> iTransaction;  //List of integers for each transaction
 
