@@ -314,9 +314,9 @@ set<Pattern<int>> SRPTree::Mine()
 	}
 	
 	list<TreeNode*>::iterator listIt;
-	list<TreeNode*> searchList;
 	vector<Transaction<int>> conditionalBase;
 	TreeNode *currentNode;
+	ConnectionRow currentRow;
 	set<Pattern<int>> rarePatterns; // can we guarentee that the same itemsets will not be repeated?
 	/*
 	 * 1. Build the conditional base for each item in R
@@ -325,11 +325,10 @@ set<Pattern<int>> SRPTree::Mine()
 	 */
 	for (setIt = searchElements.begin(); setIt != searchElements.end();setIt++)
 	{
-		searchList.clear();
-		_dfs(rootNode, *setIt, &searchList);
-		for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
+		currentRow = *connectionTable[*setIt];
+		currentNode = currentRow.firstOccurrence;
+		while(currentNode != currentRow.lastOccurrence)
 		{
-			currentNode = *listIt;
 			Transaction<int> _temp_transaction;
 			while(currentNode != rootNode)
 			{
@@ -337,6 +336,7 @@ set<Pattern<int>> SRPTree::Mine()
 				currentNode = currentNode->up;
 			}
 			conditionalBase.push_back(_temp_transaction);
+			currentNode = currentNode->nextSimilar;
 		}
 		FPTree<int> fptree(conditionalBase, rareMinSup);
 		
@@ -347,7 +347,7 @@ set<Pattern<int>> SRPTree::Mine()
 			rarePatterns.insert((*it));
 		}
 	}
-	// return rarePatterns;
+	return rarePatterns;
 }
 
 void SRPTree::clearPreviousWindow()
