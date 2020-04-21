@@ -1,10 +1,4 @@
 #include "SRPTree.h"
-
-#include <iostream>
-#include <vector>
-#include <set>
-#include <limits>
-
 #include "external/FP-growth/include/fptree.hpp"
 
 SRPTree::SRPTree()
@@ -20,49 +14,104 @@ SRPTree::SRPTree()
 	useDfs = true;
 }
 
+void SRPTree::ClearWhiteSpace()
+{
+	sConfigFileLine.erase(remove(sConfigFileLine.begin(), sConfigFileLine.end(), ' '), sConfigFileLine.end());
+	sConfigFileLine.erase(remove(sConfigFileLine.begin(), sConfigFileLine.end(), '\t'), sConfigFileLine.end());
+}
 int SRPTree::Initialize()
 {
-	cout << "Database name is " << filename.data() << endl;
+	bool foundConfiguration = false;
+	int activeConfiguration = -1;
+	configStream.open("miningsettings.config");
 
+	if (!configStream) {
+		cout << "ConfigFile not present..." << endl;
+		return 0;
+	}
+	
+	while (getline(configStream, sConfigFileLine)) {
+		if (activeConfiguration == -1)
+		{
+			if (sConfigFileLine.find("Active Configuration:") != string::npos)
+			{
+				//string s = sConfigFileLine.replace(sConfigFileLine.find("Active Configuration:"), 21, "").c_str();
+				sConfigFileLine.replace(sConfigFileLine.find("Active Configuration:"), 21, "");
+				ClearWhiteSpace();
+				activeConfiguration = atoi(sConfigFileLine.c_str());
+			}
+			continue;
+		}
+
+		if (!foundConfiguration && sConfigFileLine.find("Configuration 		:") != string::npos)
+		{
+			if (sConfigFileLine.find("Configuration 		:") != string::npos)
+			{
+				sConfigFileLine.replace(sConfigFileLine.find("Configuration 		:"), 17, "");
+				ClearWhiteSpace();
+
+				if (atoi(sConfigFileLine.c_str()) == activeConfiguration)
+				{
+					foundConfiguration = true;
+				}
+			}
+			continue;
+		}
+		if (foundConfiguration)
+		{
+			if (sConfigFileLine.find("DatasetFilename") != string::npos)
+			{
+				sConfigFileLine.replace(sConfigFileLine.find("DatasetFilename		: 	"), 18, "");
+				ClearWhiteSpace();
+				filename = sConfigFileLine.c_str();
+			}
+			else
+			{
+				continue;
+			}
+
+			getline(configStream, sConfigFileLine);
+			sConfigFileLine.replace(sConfigFileLine.find("RareMinSup			:"), 14, "");
+			ClearWhiteSpace();
+			rareMinSup = atoi((sConfigFileLine.c_str()));
+
+			getline(configStream, sConfigFileLine);
+			sConfigFileLine.replace(sConfigFileLine.find("FreqMinSup			:"), 14, "");
+			ClearWhiteSpace();
+			freqMinSup = atoi(sConfigFileLine.c_str());
+			
+			getline(configStream, sConfigFileLine);
+			sConfigFileLine.replace(sConfigFileLine.find("WindowSize			:"), 14, "");
+			ClearWhiteSpace();
+			windowSize = atoi(sConfigFileLine.c_str());
+
+			break;
+		}
+
+		sConfigFileLine.clear();
+	}
+	if (!foundConfiguration)
+	{
+		cout << "Configuration Not found" << endl;
+	}
+	
+	cout << "Database name is " << filename.data() << endl;
+	
 	//Open file
 	in.open(filename);
 
 	if (!in) {
-		cout << "Database file not present. Please check the file."<<endl;
+		cout << "Database file not present. Please check the file." << endl;
 		return 0;
 	}
 
-	//Small optimization for memory and perf 
-	cout << "Enter the number of distinct elements for memory and perf optimization. Else, use '0' for default of 1024) "<<endl;
-	cin >> inputDistinctElements;
-
-	//The idea is based on the premise that the number of distinct elements will be continuous numbers
-	if (inputDistinctElements != 0)
-		distinctElements = inputDistinctElements;
-	else
-	{
-		cout << "Using default value..."<<endl;
-	}
-
-	//connectionTable.resize(distinctElements);
-	//dbElementFrequency.resize(distinctElements);
-
-	cout << "Enter rareMinSup ";
-	cin >> rareMinSup;
-	cout << "Enter freqMinSup ";
-	cin >> freqMinSup;
-	cout << "Enter Windowsize (press 0 for default value of 1000) ";
-	cin >> inputWindowSize;  
-	if (inputWindowSize != 0)
-		windowSize = inputWindowSize;
-	   	  	
-	cout << "rareMinSup" << rareMinSup<<endl;
-	cout << "freqMinSup" << freqMinSup<<endl;
-	//cout << "dbElementFrequency.size " << dbElementFrequency.size() << endl;
+	cout << "rareMinSup " << rareMinSup << endl;
+	cout << "freqMinSup " << freqMinSup << endl;
+	cout << "windowSize " << windowSize << endl;
 
 	//Allocate Root Node
 	rootNode = AllocateTreeNodeMemory(0);
-	
+
 	return 1;
 }
 
@@ -322,7 +371,7 @@ set<Pattern<int>> SRPTree::Mine()
 {
 	cout << "mining" << endl;
 	set<int> searchElements;
-	int i;
+	unsigned int i;
 
 	int f;
 	// get rare items
