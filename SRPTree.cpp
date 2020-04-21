@@ -363,6 +363,9 @@ void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transac
 	}
 	
 	for (int i=0; i < minSupport; i++) {
+		// for (auto e: _temp_transaction)
+		// 	cout << e << " ";
+		// cout << endl;
 		conditionalBase -> push_back(_temp_transaction);
 	}
 }
@@ -384,7 +387,6 @@ set<Pattern<int>> SRPTree::Mine()
 	}
 	
 	set<int> rareItems(searchElements);
-	set<int>::iterator setIt;
 	map <int, int> _connectedElements;
 	
 	// get items co occuring with rare items
@@ -401,7 +403,8 @@ set<Pattern<int>> SRPTree::Mine()
 	TreeNode *currentNode;
 	ConnectionRow currentRow; // when using horizontal connections
 	list<TreeNode*> searchList; // when using the dfs
-	set<Pattern<int>> rarePatterns; // can we guarentee that the same itemsets will not be repeated?
+	map<set<int>, int> rarePatterns; // can we guarentee that the same itemsets will not be repeated?
+	set<set<int>> blacklisted;
 	/*
 	 * 1. Build the conditional base for each item in R
 	 * 2. Apply FP growth on it.
@@ -409,6 +412,8 @@ set<Pattern<int>> SRPTree::Mine()
 	 */
 	for (auto searchElement: searchElements)
 	{
+		conditionalBase.clear();
+		// cout << "*****" << searchElement << endl;
 		if(useDfs){
 			searchList.clear();                                                
 			_dfs(rootNode, searchElement, &searchList);
@@ -419,40 +424,57 @@ set<Pattern<int>> SRPTree::Mine()
 			}
 		}else{
 			currentRow = *connectionTable[searchElement];
+			// cout << searchElement << "-" << currentRow.elementFrequency << endl;
 			currentNode = currentRow.firstOccurrence;
-			while(currentNode != currentRow.lastOccurrence)
+			while(currentNode)
 			{
+				//cout << "--"<< endl;
 				_get_transactions(currentNode, rootNode, &conditionalBase);
 				currentNode = currentNode->nextSimilar;
 			}
 		}
 		FPTree<int> fptree(conditionalBase, rareMinSup);
-
+		
 		// making sure the header table in the FPtree only has the item we are looking at
-		shared_ptr<FPNode<int>> headerTableItem = fptree.header_table[searchElement];
-		fptree.header_table.clear();
-		fptree.header_table.insert(pair<int, shared_ptr<FPNode<int>>>(searchElement, headerTableItem));
+		// shared_ptr<FPNode<int>> headerTableItem = fptree.header_table[searchElement];
+		// fptree.header_table.clear();
+		// fptree.header_table.insert(pair<int, shared_ptr<FPNode<int>>>(searchElement, headerTableItem));
 		
 		const std::set<Pattern<int>> patterns = fptree_growth( fptree );
-		for (auto p: patterns)
+		for (auto [el, f]: patterns)
 		{
-			rarePatterns.insert(p); // need to check if duplicates are being generated
+			if (f >= rareMinSup && f < freqMinSup){
+				if (el.size() == 1){
+					if (rareItems.find(*el.begin()) != rareItems.end())
+						rarePatterns.insert(pair<set<int>, int>(el, f));
+				}else{
+					if (blacklisted.find(el) == blacklisted.end()){
+						if (rarePatterns.find(el) == rarePatterns.end())
+							rarePatterns.insert(pair<set<int>, int>(el, f));
+						else if (rarePatterns[el] < f)
+							rarePatterns[el] = f;
+					}
+				}
+			}else{
+				if (rarePatterns.find(el) != rarePatterns.end()){
+					rarePatterns.erase(el);
+				}
+				blacklisted.insert(el);
+			}
 		}
+			
 	}
 
 	cout << "Patterns detected: " << endl;
 	for (auto p: rarePatterns) {
-		if (p.first.size() == 1){
-			rarePatterns.erase(p);
-			continue;
-		}
+		cout << "{ ";
 		for (auto s: p.first){
 			cout << s << " ";
 		}
-		cout << ":: "<< p.second << endl;
+		cout << "} \t\tf: "<< p.second << endl;
 	}
 	clearPreviousWindow();
-	return rarePatterns;
+	//return rarePatterns;
 }
 
 void SRPTree::clearPreviousWindow()
