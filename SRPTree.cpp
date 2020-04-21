@@ -302,7 +302,7 @@ void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
 }
 
 
-void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transaction<int>> conditionalBase){
+void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transaction<int>> *conditionalBase){
 	Transaction<int> _temp_transaction;
 	int minSupport = numeric_limits<int>::max();
 	while(currentNode != rootNode)
@@ -312,42 +312,40 @@ void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transac
 		_temp_transaction.push_back(currentNode->elementValue);
 		currentNode = currentNode->up;
 	}
+	
 	for (int i=0; i < minSupport; i++) {
-		conditionalBase.push_back(_temp_transaction);
+		conditionalBase -> push_back(_temp_transaction);
 	}
 }
 
 set<Pattern<int>> SRPTree::Mine()
 {
 	cout << "mining" << endl;
-	clearPreviousWindow();
 	set<int> searchElements;
 	int i;
 
 	int f;
 	// get rare items
-	for (i=0; i < connectionTable.size(); i++)
+	for (auto [el, row]: connectionTable)
 	{
-		f = connectionTable[i]->elementFrequency;
+		// f = connectionTable[i]->elementFrequency;
+		f = row->elementFrequency;
 		if( f >= rareMinSup && f < freqMinSup )
-			searchElements.insert(i);
+			searchElements.insert(el);
 	}
-
+	
 	set<int> rareItems(searchElements);
 	set<int>::iterator setIt;
 	map <int, int> _connectedElements;
+	
 	// get items co occuring with rare items
-	for (i = 0; i < connectionTable.size(); i++)
+	for (auto rareElement: rareItems)
 	{
-		if( connectionTable[i]->elementFrequency >= freqMinSup){
-			_connectedElements = connectionTable[i]->connectedElements;
-			// Loop over the rare items and check if any of the rare items co occur with this item
-			for (setIt = rareItems.begin(); setIt != rareItems.end(); setIt++) {
-				if (_connectedElements.find(*setIt) != _connectedElements.end())
-					searchElements.insert(i);
-			}
+		for(auto [el, f]: connectionTable[rareElement]->connectedElements){
+			if ( f >= rareMinSup )
+				searchElements.insert(el);
 		}
-	}
+	}	
 	
 	list<TreeNode*>::iterator listIt;
 	vector<Transaction<int>> conditionalBase;
@@ -360,36 +358,51 @@ set<Pattern<int>> SRPTree::Mine()
 	 * 2. Apply FP growth on it.
 	 * TODO: The FP growth sill prune none rare itemsets, how?
 	 */
-	for (setIt = searchElements.begin(); setIt != searchElements.end();setIt++)
+	for (auto searchElement: searchElements)
 	{
 		if(useDfs){
 			searchList.clear();                                                
-			_dfs(rootNode, *setIt, &searchList);                               
+			_dfs(rootNode, searchElement, &searchList);
 			for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
 			{
 				currentNode = *listIt;
-				_get_transactions(currentNode, rootNode, conditionalBase);
+				_get_transactions(currentNode, rootNode, &conditionalBase);
 			}
 		}else{
-		
-			currentRow = *connectionTable[*setIt];
+			currentRow = *connectionTable[searchElement];
 			currentNode = currentRow.firstOccurrence;
 			while(currentNode != currentRow.lastOccurrence)
 			{
-				_get_transactions(currentNode, rootNode, conditionalBase);
+				_get_transactions(currentNode, rootNode, &conditionalBase);
 				currentNode = currentNode->nextSimilar;
 			}
 		}
 		FPTree<int> fptree(conditionalBase, rareMinSup);
+
+		// making sure the header table in the FPtree only has the item we are looking at
+		shared_ptr<FPNode<int>> headerTableItem = fptree.header_table[searchElement];
+		fptree.header_table.clear();
+		fptree.header_table.insert(pair<int, shared_ptr<FPNode<int>>>(searchElement, headerTableItem));
 		
 		const std::set<Pattern<int>> patterns = fptree_growth( fptree );
-		set<Pattern<int>>::iterator it;
-		for (it=patterns.begin(); it != patterns.end(); it++)
+		for (auto p: patterns)
 		{
-			rarePatterns.insert((*it)); // need to check if duplicates are being generated
+			rarePatterns.insert(p); // need to check if duplicates are being generated
 		}
-		
 	}
+
+	cout << "Patterns detected: " << endl;
+	for (auto p: rarePatterns) {
+		if (p.first.size() == 1){
+			rarePatterns.erase(p);
+			continue;
+		}
+		for (auto s: p.first){
+			cout << s << " ";
+		}
+		cout << ":: "<< p.second << endl;
+	}
+	clearPreviousWindow();
 	return rarePatterns;
 }
 
