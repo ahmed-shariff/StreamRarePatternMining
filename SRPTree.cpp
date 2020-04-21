@@ -351,22 +351,28 @@ void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
 }
 
 
-void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transaction<int>> *conditionalBase){
+void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transaction<int>> *conditionalBase, set<int> rareItems){
 	Transaction<int> _temp_transaction;
 	int minSupport = numeric_limits<int>::max();
+	bool hasRareItem = false;
 	while(currentNode != rootNode)
 	{
+		if(rareItems.find(currentNode->elementValue) != rareItems.end())
+			hasRareItem = true;
 		if(currentNode->elementFrequency < minSupport)
 			minSupport = currentNode->elementFrequency;
 		_temp_transaction.push_back(currentNode->elementValue);
 		currentNode = currentNode->up;
 	}
+
 	
-	for (int i=0; i < minSupport; i++) {
-		// for (auto e: _temp_transaction)
-		// 	cout << e << " ";
-		// cout << endl;
-		conditionalBase -> push_back(_temp_transaction);
+	// for (auto e: _temp_transaction)
+	// 	cout << e << " ";
+	// cout << "::"<< hasRareItem << endl;
+	if(hasRareItem){
+		for (int i=0; i < minSupport; i++) {
+			conditionalBase -> push_back(_temp_transaction);
+		}
 	}
 }
 
@@ -422,7 +428,7 @@ map<set<int>, int> SRPTree::Mine()
 			for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
 			{
 				currentNode = *listIt;
-				_get_transactions(currentNode, rootNode, &conditionalBase);
+				_get_transactions(currentNode, rootNode, &conditionalBase, rareItems);
 			}
 		}else{
 			currentRow = *connectionTable[*searchElement];
@@ -431,18 +437,36 @@ map<set<int>, int> SRPTree::Mine()
 			while(currentNode)
 			{
 				//cout << "--"<< endl;
-				_get_transactions(currentNode, rootNode, &conditionalBase);
+				_get_transactions(currentNode, rootNode, &conditionalBase, rareItems);
 				currentNode = currentNode->nextSimilar;
 			}
 		}
+		
 		FPTree<int> fptree(conditionalBase, rareMinSup);
-		
-		// making sure the header table in the FPtree only has the item we are looking at
-		// shared_ptr<FPNode<int>> headerTableItem = fptree.header_table[searchElement];
-		// fptree.header_table.clear();
-		// fptree.header_table.insert(pair<int, shared_ptr<FPNode<int>>>(searchElement, headerTableItem));
-		
+		map<int, shared_ptr<FPNode<int>>> headerTable;
+		// making sure the header table in the FPtree only has the rare items we are looking at
+		for (set<int>::iterator _it = rareItems.begin(); _it != rareItems.end(); _it++){
+			if (fptree.header_table.find(*_it) != fptree.header_table.end()){
+				shared_ptr<FPNode<int>> headerTableItem = fptree.header_table[*_it];
+				headerTable.insert(pair<int, shared_ptr<FPNode<int>>>(*_it, headerTableItem));
+			}
+		}
+		fptree.header_table = headerTable;
+		// for (auto [e, el]: fptree.header_table )
+		// 	cout << e << "-";
+		// cout << *searchElement << endl;
+		// for (auto c: conditionalBase){
+		// 	for (auto e: c)
+		// 		cout << e << " + ";
+		// 	cout << endl;
+		// }
 		const std::set<Pattern<int>> patterns = fptree_growth( fptree );
+		// for (auto [el, f]: patterns){
+		// 	for (auto e: el){
+		// 		cout << e << " - ";
+		// 	}
+		// 	cout << endl;
+		// }
 		for (set<Pattern<int>>::iterator it = patterns.begin(); it != patterns.end(); it++)
 			//for (auto [el, f]: patterns)
 		{
