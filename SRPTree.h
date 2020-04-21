@@ -70,7 +70,7 @@ public:
 	int Finalize();
 	int ReadTransaction();
 	int GetWindowSize();
-	set<Pattern<int>> Mine();
+	map<set<int>, int> Mine();
 
 	//void GetFreqMinSup();
 };
