@@ -525,6 +525,41 @@ map<set<int>, int> SRPTree::_MineNonRareItemItemsets()
 	// 		cout << e << " " ;
 	// 	cout << endl;
 	// }
+	FPTree<int> fptree(conditionalBase, rareMinSup);
+		
+	// making sure the header table in the FPtree only has the item we are looking at
+	// shared_ptr<FPNode<int>> headerTableItem = fptree.header_table[searchElement];
+	// fptree.header_table.clear();
+	// fptree.header_table.insert(pair<int, shared_ptr<FPNode<int>>>(searchElement, headerTableItem));
+		
+	const std::set<Pattern<int>> patterns = fptree_growth( fptree );
+	for (set<Pattern<int>>::iterator it = patterns.begin(); it != patterns.end(); it++)
+		//for (auto [el, f]: patterns)
+	{
+		set<int> el = (*it).first;
+		int f = (*it).second;
+		if (f >= rareMinSup && f < freqMinSup){
+			rarePatterns.insert(pair<set<int>, int>(el, f));
+		}
+		// if (f >= rareMinSup && f < freqMinSup){
+		// 	if (el.size() == 1){
+		// 		if (rareItems.find(*el.begin()) != rareItems.end())
+		// 			rarePatterns.insert(pair<set<int>, int>(el, f));
+		// 	}else{
+		// 		if (blacklisted.find(el) == blacklisted.end()){
+		// 			if (rarePatterns.find(el) == rarePatterns.end())
+		// 				rarePatterns.insert(pair<set<int>, int>(el, f));
+		// 			else if (rarePatterns[el] < f)
+		// 				rarePatterns[el] = f;
+		// 		}
+		// 	}
+		// }else{
+		// 	if (rarePatterns.find(el) != rarePatterns.end()){
+		// 		rarePatterns.erase(el);
+		// 	}
+		// 	blacklisted.insert(el);
+		// }
+	}
 	
 	
 	cout << "Patterns detected: " << endl;
