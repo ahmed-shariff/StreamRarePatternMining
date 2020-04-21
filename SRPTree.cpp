@@ -394,7 +394,7 @@ map<set<int>, int> SRPTree::Mine()
 	{
 		map<int, int> _connectedElements = connectionTable[(*it)]->connectedElements;
 		for(map<int, int>::iterator mapit = _connectedElements.begin(); mapit != _connectedElements.end(); mapit++){
-			if ( (*mapit).second >= rareMinSup )
+			if ( connectionTable[(*mapit).first]->elementFrequency >= rareMinSup )
 				searchElements.insert((*mapit).first);
 		}
 	}
