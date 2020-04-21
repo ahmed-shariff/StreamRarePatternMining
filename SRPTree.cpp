@@ -392,10 +392,11 @@ map<set<int>, int> SRPTree::Mine()
 	//for (auto rareElement: rareItems)
 	for (set<int>::iterator it = rareItems.begin(); it != rareItems.end(); it++)
 	{
-		map<int, int> connectedElements = connectionTable[(*it)]->connectedElements;
-		for(map<int, int>::iterator mapit = _connectedElements.begin(); mapit != _connectedElements.end(); mapit++)
-			if ( (*mapit).first >= rareMinSup )
-				searchElements.insert((*mapit).second);
+		map<int, int> _connectedElements = connectionTable[(*it)]->connectedElements;
+		for(map<int, int>::iterator mapit = _connectedElements.begin(); mapit != _connectedElements.end(); mapit++){
+			if ( (*mapit).second >= rareMinSup )
+				searchElements.insert((*mapit).first);
+		}
 	}
 
 	list<TreeNode*>::iterator listIt;
