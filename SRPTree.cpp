@@ -347,7 +347,7 @@ void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
 		(*returnList).push_back(node);
 	list<TreeNode*>::iterator it;
 	for (it = node->down.begin(); it != node->down.end(); ++it)
-		_dfs(node, searchItem, returnList);
+		_dfs(*it, searchItem, returnList);
 }
 
 
