@@ -12,6 +12,7 @@ SRPTree::SRPTree()
 	//Change name of database file here
 	filename = "T10I4D100K.dat.txt";
 	useDfs = false;
+	mineRareItemItemsets = false;
 }
 
 void SRPTree::ClearWhiteSpace()
@@ -370,7 +371,7 @@ void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transac
 	}
 }
 
-map<set<int>, int> SRPTree::Mine()
+map<set<int>, int> SRPTree::_MineRareItemItemsets()
 {
 	cout << "mining" << endl;
 	set<int> searchElements;
@@ -481,6 +482,72 @@ map<set<int>, int> SRPTree::Mine()
 	clearPreviousWindow();
 	return rarePatterns;
 }
+
+int _dfs_mine_transactions(TreeNode node, vector<Transaction<int>> *conditionalBase, Transaction<int> transaction, int minValue){
+	// if(node.elementFrequency < minValue){
+	// 	if(transaction.size() > 0){
+	// 		for(int i = 0 ; i < minValue; i++){
+	// 			Transaction<int> _transaction(transaction);
+	// 			conditionalBase->push_back(transaction);
+	// 		}
+	// 	}
+	// 	minValue = node.elementFrequency;
+	// }
+	// if(node.down.size() == 0){
+	// 	transaction.push_back(node.elementValue);
+	// 	for(int i = 0 ; i < minValue; i++){
+	// 		conditionalBase->push_back(transaction);
+	// 	}
+	// }else{
+	if (node.up)
+		transaction.push_back(node.elementValue);
+	int childMinValueSum = 0;
+	for (list<TreeNode*>::iterator it = node.down.begin(); it != node.down.end(); it++ ){
+		childMinValueSum += _dfs_mine_transactions(*(*it), conditionalBase, transaction, minValue);
+	}
+	if ( node.up && node.elementFrequency > childMinValueSum ){
+		for (int i = 0; i < (node.elementFrequency - childMinValueSum); i++) {
+			Transaction<int> _transaction(transaction);
+			conditionalBase->push_back(_transaction);
+		}
+	}
+	return node.elementFrequency;
+}
+
+map<set<int>, int> SRPTree::_MineNonRareItemItemsets()
+{
+	map<set<int>, int> rarePatterns;
+	vector<Transaction<int>> conditionalBase;
+
+	_dfs_mine_transactions(*rootNode, &conditionalBase, *(new Transaction<int>()), numeric_limits<int>::max());
+	// for (auto t: conditionalBase){
+	// 	for (auto e: t)
+	// 		cout << e << " " ;
+	// 	cout << endl;
+	// }
+	
+	
+	cout << "Patterns detected: " << endl;
+	for (auto p: rarePatterns) {
+		cout << "{ ";
+		for (auto s: p.first){
+			cout << s << " ";
+		}
+		cout << "} \t\tf: "<< p.second << endl;
+	}
+	clearPreviousWindow();
+	return rarePatterns;
+}
+
+map<set<int>, int> SRPTree::Mine()
+{
+	cout << "mining" << endl;
+	if (mineRareItemItemsets)
+		return _MineRareItemItemsets();
+	else
+		return _MineNonRareItemItemsets();
+}
+
 
 void SRPTree::clearPreviousWindow()
 {

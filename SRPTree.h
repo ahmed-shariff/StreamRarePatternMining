@@ -46,6 +46,7 @@ class SRPTree {
 	ifstream configStream;
 	TreeNode *rootNode;
 	bool useDfs;
+	bool mineRareItemItemsets;
 	
 	//vector <ConnectionRow*> connectionTable;
 	map <int, ConnectionRow*> connectionTable;
@@ -73,4 +74,7 @@ public:
 	map<set<int>, int> Mine();
 
 	//void GetFreqMinSup();
+private:
+	map<set<int>, int> _MineRareItemItemsets();
+	map<set<int>, int> _MineNonRareItemItemsets();
 };
