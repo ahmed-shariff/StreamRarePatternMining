@@ -5,6 +5,8 @@
 #include <sstream>
 #include <list>
 #include <map>
+#include <set>
+#include <limits>
 #include "external/FP-growth/include/fptree.hpp"
 
 using namespace std;
@@ -39,7 +41,9 @@ class SRPTree {
 	int distinctElements;
 	int inputDistinctElements;
 	string filename;
+	string sConfigFileLine;
 	ifstream in;
+	ifstream configStream;
 	TreeNode *rootNode;
 	bool useDfs;
 	
@@ -57,6 +61,7 @@ class SRPTree {
 	ConnectionRow* AllocateConnectionRow();
 	void clearPreviousWindow();
 	void DeleteTreeNodes();
+	void ClearWhiteSpace();
 
 public:
 	SRPTree();
