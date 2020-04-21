@@ -341,10 +341,14 @@ ConnectionRow* SRPTree::AllocateConnectionRow()
 	}
 }
 
-void _dfs(TreeNode* node, int searchItem, list<TreeNode*> *returnList)
+void _dfs(TreeNode* node, int searchItem, int freq, list<TreeNode*> *returnList)
 {
 	if(node->elementValue == searchItem)
 		(*returnList).push_back(node);
+	if (returnList->size() == freq)
+	{ 
+		return;
+	}
 	list<TreeNode*>::iterator it;
 	for (it = node->down.begin(); it != node->down.end(); ++it)
 		_dfs(*it, searchItem, returnList);
@@ -423,8 +427,9 @@ map<set<int>, int> SRPTree::Mine()
 		conditionalBase.clear();
 		// cout << "*****" << searchElement << endl;
 		if(useDfs){
-			searchList.clear();                                                
-			_dfs(rootNode, *searchElement, &searchList);
+			searchList.clear(); 
+			int freq = connectionTable[*searchElement]->elementFrequency;
+			_dfs(rootNode, *searchElement, freq, &searchList);
 			for (listIt=searchList.begin(); listIt!=searchList.end(); listIt++)
 			{
 				currentNode = *listIt;
