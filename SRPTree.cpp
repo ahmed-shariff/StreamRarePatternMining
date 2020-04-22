@@ -85,6 +85,11 @@ int SRPTree::Initialize()
 			ClearWhiteSpace();
 			windowSize = atoi(sConfigFileLine.c_str());
 
+			getline(configStream, sConfigFileLine);
+			sConfigFileLine.replace(sConfigFileLine.find("Horizontal link		:"), 18, "");
+			ClearWhiteSpace();
+			useDfs = !atoi(sConfigFileLine.c_str());
+			
 			break;
 		}
 
