@@ -127,7 +127,7 @@ int SRPTree::ReadTransaction()
 
 	if (in) 
 	{
-		cout << endl;
+		//cout << endl;
 		//Read the transaction as a string
 		getline(in, sTransaction);  // delim defaults to '\n'
 		//Store it as integer in a list
@@ -141,7 +141,7 @@ int SRPTree::ReadTransaction()
 		//Build tree
 		AddToTree();
 		list<int>::iterator it;
-		cout << endl;
+		//cout << endl;
 		//for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
 		//	std::cout << ' ' << *it;
 		/*cout << endl;*/
@@ -176,7 +176,7 @@ void SRPTree::ExtractIntegersToList()
 		/* Checking the given word is integer or not */
 		if (stringstream(temp) >> found)
 		{
-			cout << found << " ";
+			//cout << found << " ";
 			iTransaction.push_back(found);
 		}
 
@@ -184,6 +184,7 @@ void SRPTree::ExtractIntegersToList()
 		temp = "";
 	}
 	sTransaction.clear();
+	//cout << endl;
 }
 
 void SRPTree::AddElementFrequency()
@@ -383,7 +384,7 @@ void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transac
 
 map<set<int>, int> SRPTree::Mine()
 {
-	cout << "mining" << endl;
+	//cout << "mining" << endl;
 	set<int> searchElements;
 
 	int f;
@@ -513,15 +514,34 @@ map<set<int>, int> SRPTree::Mine()
 			cout << "} \t\tf: " << p.second << endl;
 		}*/
 	}
+	static int filewrite = 1;
+	string sfilenamewrite = to_string(filewrite)+ filename + "_dfs_" + to_string(useDfs) + "horizontallink" + to_string(!useDfs) + "_rareminsup_" + to_string(rareMinSup) + "_freqminsup_" + to_string(freqMinSup) + ".txt";
+	ofstream filepatternwrite;
+	
+	filepatternwrite.open(sfilenamewrite.c_str(), std::ofstream::out | std::ofstream::app);
 
-	cout << "Patterns detected: " << endl;
-	for (auto p: rarePatterns) {
+	if(filepatternwrite.is_open())
+	{
+		cout << "file writing... " << endl;
+		filepatternwrite << "mining count" << filewrite <<endl;
+		for (auto p: rarePatterns) {
+			filepatternwrite << "{ ";
+			for (auto s: p.first){
+				filepatternwrite << s << " ";
+			}
+			filepatternwrite << "} \t\tf: "<< p.second << endl;
+		}
+		filewrite++;
+		filepatternwrite.close();
+	}
+/*
+	for (auto p : rarePatterns) {
 		cout << "{ ";
-		for (auto s: p.first){
+		for (auto s : p.first) {
 			cout << s << " ";
 		}
-		cout << "} \t\tf: "<< p.second << endl;
-	}
+		cout << "} \t\tf: " << p.second << endl;*/
+
 	clearPreviousWindow();
 	return rarePatterns;
 }
@@ -543,11 +563,11 @@ void SRPTree::clearPreviousWindow()
 
 void SRPTree::DeleteTreeNodes()
 {
-	cout << "deletion" << endl;
+	//cout << "deletion" << endl;
 	//Without tree traversal
 	for (std::map<int, ConnectionRow*>::reverse_iterator  connectionTableIterator = connectionTable.rbegin(); connectionTableIterator != connectionTable.rend(); ++connectionTableIterator)
 	{
-		cout << connectionTableIterator->first << " ";
+		//cout << connectionTableIterator->first << " ";
 
 
 		while (connectionTableIterator->second->lastOccurrence && connectionTableIterator->second->lastOccurrence->prevSimilar)
@@ -587,5 +607,5 @@ void SRPTree::DeleteTreeNodes()
 
 		
 	}
-	cout << endl<< "elements left after deletion" << rootNode->down.size()<<endl;
+	//cout << endl<< "elements left after deletion" << rootNode->down.size()<<endl;
 }
