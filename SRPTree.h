@@ -7,7 +7,7 @@
 #include <map>
 #include <set>
 #include <limits>
-#include "external/FP-growth/include/fptree.hpp"
+#include "FPTree.h"
 
 using namespace std;
 
@@ -46,7 +46,7 @@ class SRPTree {
 	ifstream configStream;
 	TreeNode *rootNode;
 	bool useDfs;
-	
+
 	//vector <ConnectionRow*> connectionTable;
 	map <int, ConnectionRow*> connectionTable;
 	//vector<int> dbElementFrequency; //Vector created to store the frequency of each element
