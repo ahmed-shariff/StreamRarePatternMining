@@ -1,7 +1,6 @@
 #include <iostream>
 #include "SRPTree.h"
 #include <ctime>
-//#include <unistd.h>
 
 using namespace std;
 
@@ -22,7 +21,7 @@ int main()
 
 	begin1 = clock();
 		
-	string sPerfFile = "perfFile1.txt";
+	string sPerfFile = "perfFile20.txt";
 	ofstream fileperfwrite;
 
 	fileperfwrite.open(sPerfFile.c_str(), std::ofstream::out | std::ofstream::app);
@@ -64,10 +63,6 @@ int main()
 
 			readCount = 0;
 		}
-		//Test code for first 100 elements
-		//if (readCount == 100)
-		//	break;
-
 	}
 	end1 = clock();
 	srpTree.Finalize();
