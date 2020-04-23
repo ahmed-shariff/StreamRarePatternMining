@@ -9,7 +9,6 @@ SRPTree::SRPTree()
 	inputWindowSize = 0; //input window size given by a user
 	distinctElements = 1024;
 	inputDistinctElements = 0;
-	//Change name of database file here
 	filename = "T10I4D100K.dat.txt";
 	useDfs = true;
 }
@@ -35,7 +34,6 @@ int SRPTree::Initialize()
 		{
 			if (sConfigFileLine.find("Active Configuration:") != string::npos)
 			{
-				//string s = sConfigFileLine.replace(sConfigFileLine.find("Active Configuration:"), 21, "").c_str();
 				sConfigFileLine.replace(sConfigFileLine.find("Active Configuration:"), 21, "");
 				ClearWhiteSpace();
 				activeConfiguration = atoi(sConfigFileLine.c_str());
@@ -89,7 +87,7 @@ int SRPTree::Initialize()
 			sConfigFileLine.replace(sConfigFileLine.find("Horizontal link		:"), 18, "");
 			ClearWhiteSpace();
 			useDfs = !atoi(sConfigFileLine.c_str());
-			
+
 			break;
 		}
 
@@ -113,6 +111,7 @@ int SRPTree::Initialize()
 	cout << "rareMinSup " << rareMinSup << endl;
 	cout << "freqMinSup " << freqMinSup << endl;
 	cout << "windowSize " << windowSize << endl;
+	cout << "use dfs " << useDfs << endl;
 
 	//Allocate Root Node
 	rootNode = AllocateTreeNodeMemory(0);
@@ -132,7 +131,6 @@ int SRPTree::ReadTransaction()
 
 	if (in) 
 	{
-		//cout << endl;
 		//Read the transaction as a string
 		getline(in, sTransaction);  // delim defaults to '\n'
 		//Store it as integer in a list
@@ -146,15 +144,10 @@ int SRPTree::ReadTransaction()
 		//Build tree
 		AddToTree();
 		list<int>::iterator it;
-		//cout << endl;
-		//for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
-		//	std::cout << ' ' << *it;
-		/*cout << endl;*/
 
 		//Clear the list for the next transaction
 		iTransaction.clear();
 
-	//	return 0; //temporary
 		return 1;
 	}
 	else
@@ -167,29 +160,22 @@ void SRPTree::ExtractIntegersToList()
 {
 	stringstream ss;
 
-	/* Storing the whole string into string stream */
 	ss << sTransaction;
 
-	/* Running loop till the end of the stream */
 	string temp;
 	int found;
 	while (!ss.eof()) {
 
-		/* extracting word by word from stream */
 		ss >> temp;
 
-		/* Checking the given word is integer or not */
 		if (stringstream(temp) >> found)
 		{
-			//cout << found << " ";
 			iTransaction.push_back(found);
 		}
 
-		/* To save from space at the end of string */
 		temp = "";
 	}
 	sTransaction.clear();
-	//cout << endl;
 }
 
 void SRPTree::AddElementFrequency()
@@ -199,14 +185,10 @@ void SRPTree::AddElementFrequency()
 	
 	for (it = iTransaction.begin(); it != iTransaction.end(); ++it)
 	{
-		//cout<<"before" <<dbElementFrequency[*it]++ << "after"<<dbElementFrequency[*it] <<endl;
-	
 		connectionTableIterator = connectionTable.find(*it);
 
-	//	if (connectionTableIterator != connectionTable.end())
-	//	{
-			connectionTableIterator->second->elementFrequency++;
-	//	}
+		connectionTableIterator->second->elementFrequency++;
+
 		connectionTableIterator = connectionTable.end();
 	}
 }
@@ -268,7 +250,6 @@ TreeNode* SRPTree::AllocateTreeNodeMemory(int value)
 	TreeNode* newNode = new(nothrow) TreeNode();
 	if (newNode)
 	{
-		//newNode->up= newNode->down = newNode->nextSimilar  = NULL;
 		newNode->elementValue = value;
 		newNode->elementFrequency = 1;
 		return newNode;
@@ -309,27 +290,6 @@ void SRPTree::AddToConnectionTable()
 				mapIterator->second++;
 			}
 		}
-
-		//if (!connectionTable[*it])
-		//{
-		//	connectionTable[*it] = AllocateConnectionRow();	
-		//}
-		//std::list<int>::iterator itmid = it;
-		//map<int, int>::iterator mapIterator;
-		//itmid++;
-
-		//for (itmid; itmid != iTransaction.end(); ++itmid)
-		//{
-		//	mapIterator = connectionTable[*it]->connectedElements.find(*(itmid));
-		//	if(mapIterator == connectionTable[*itmid]->connectedElements.end())
-		//	{ 
-		//		connectionTable[*it]->connectedElements.insert(pair<int, int>(*itmid, 1));
-		//	}
-		//	else
-		//	{
-		//		mapIterator->second++;
-		//	}
-		//}
 	}
 }
 
@@ -349,7 +309,6 @@ ConnectionRow* SRPTree::AllocateConnectionRow()
 
 void _dfs(TreeNode* node, int searchItem, int freq, list<TreeNode*> *returnList)
 {
-	//cout << node->elementValue<<endl;
 	if(node->elementValue == searchItem)
 		(*returnList).push_back(node);
 	if (returnList->size() == freq)
@@ -380,20 +339,16 @@ void _get_transactions(TreeNode* currentNode, TreeNode* rootNode, vector<Transac
 	}
 	
 	for (int i=0; i < minSupport; i++) {
-		// for (auto e: _temp_transaction)
-		// 	cout << e << " ";
-		// cout << endl;
 		conditionalBase -> push_back(_temp_transaction);
 	}
 }
 
 map<set<int>, int> SRPTree::Mine()
 {
-	//cout << "mining" << endl;
 	set<int> searchElements;
 
 	int f;
-	// get rare items
+
 	for(map<int, ConnectionRow*>::iterator it = connectionTable.begin(); it != connectionTable.end(); it ++)
 	{
 		f = (*it).second->elementFrequency;
@@ -404,8 +359,6 @@ map<set<int>, int> SRPTree::Mine()
 	set<int> rareItems(searchElements);
 	map <int, int> _connectedElements;
 	
-	// get items co occuring with rare items
-	//for (auto rareElement: rareItems)
 	for (set<int>::iterator it = rareItems.begin(); it != rareItems.end(); it++)
 	{
 		map<int, int> _connectedElements = connectionTable[(*it)]->connectedElements;
@@ -420,22 +373,16 @@ map<set<int>, int> SRPTree::Mine()
 	TreeNode *currentNode;
 	ConnectionRow currentRow; // when using horizontal connections
 	list<TreeNode*> searchList; // when using the dfs
-	map<set<int>, int> rarePatterns; // can we guarentee that the same itemsets will not be repeated?
+	map<set<int>, int> rarePatterns; 
 	set<set<int>> blacklisted;
-	/*
-	 * 1. Build the conditional base for each item in R
-	 * 2. Apply FP growth on it.
-	 * TODO: The FP growth sill prune none rare itemsets, how?
-	 */
+	
 	for (set<int>::iterator searchElement = searchElements.begin(); searchElement != searchElements.end(); searchElement++)
-		//for (auto searchElement: searchElements)
 	{
 		int itemFrequency = connectionTable[*searchElement]->elementFrequency;
 		bool freqItem = false;
 		if (itemFrequency >= freqMinSup)
 			freqItem = true;
 		conditionalBase.clear();
-		// cout << "*****" << searchElement << endl;
 		if(useDfs){
 			searchList.clear();                 
 			int freq = connectionTable[*searchElement]->elementFrequency;
@@ -447,7 +394,6 @@ map<set<int>, int> SRPTree::Mine()
 			}
 		}else{
 			currentRow = *connectionTable[*searchElement];
-			// cout << searchElement << "-" << currentRow.elementFrequency << endl;
 			currentNode = currentRow.firstOccurrence;
 			while(currentNode)
 			{
@@ -458,20 +404,15 @@ map<set<int>, int> SRPTree::Mine()
 		}
 		FPTree<int> fptree(conditionalBase, rareMinSup);
 		
-		// making sure the header table in the FPtree only has the item we are looking at
-		// shared_ptr<FPNode<int>> headerTableItem = fptree.header_table[searchElement];
-		// fptree.header_table.clear();
-		// fptree.header_table.insert(pair<int, shared_ptr<FPNode<int>>>(searchElement, headerTableItem));
-		
+	
 		const std::set<Pattern<int>> patterns = fptree_growth( fptree );
 
 		std::set<int> singleItem;
 		singleItem.insert(*searchElement);
-		//set<int> singleitem( *searchElement, 1);
+
 		if(!freqItem)
 			rarePatterns.insert(pair<set<int>, int>(singleItem, itemFrequency));
 		for (set<Pattern<int>>::iterator it = patterns.begin(); it != patterns.end(); it++)
-			//for (auto [el, f]: patterns)
 		{
 			
 			bool rareItemFoundInFreqItemSet = false;
@@ -509,15 +450,6 @@ map<set<int>, int> SRPTree::Mine()
 				blacklisted.insert(el);
 			}
 		}
-			
-	/*	cout << "Patterns detected: " << endl;
-		for (auto p : rarePatterns) {
-			cout << "{ ";
-			for (auto s : p.first) {
-				cout << s << " ";
-			}
-			cout << "} \t\tf: " << p.second << endl;
-		}*/
 	}
 	static int filewrite = 1;
 	string sfilenamewrite = to_string(filewrite)+ filename + "_dfs_" + to_string(useDfs) + "horizontallink" + to_string(!useDfs) + "_rareminsup_" + to_string(rareMinSup) + "_freqminsup_" + to_string(freqMinSup) + ".txt";
@@ -539,13 +471,6 @@ map<set<int>, int> SRPTree::Mine()
 		filewrite++;
 		filepatternwrite.close();
 	}
-/*
-	for (auto p : rarePatterns) {
-		cout << "{ ";
-		for (auto s : p.first) {
-			cout << s << " ";
-		}
-		cout << "} \t\tf: " << p.second << endl;*/
 
 	clearPreviousWindow();
 	return rarePatterns;
@@ -612,5 +537,4 @@ void SRPTree::DeleteTreeNodes()
 
 		
 	}
-	//cout << endl<< "elements left after deletion" << rootNode->down.size()<<endl;
 }
