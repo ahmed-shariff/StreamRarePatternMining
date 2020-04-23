@@ -21,11 +21,6 @@ struct TreeNode {
 	TreeNode* prevSimilar;
 };
 
-//struct ConnectionElement {
-//	int elementValue;
-//	int elementFrequency;
-//};
-
 struct ConnectionRow {
 	TreeNode* firstOccurrence;
 	map <int, int> connectedElements; //key value is element number and the other value is frequency
